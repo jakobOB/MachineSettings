@@ -64,44 +64,7 @@
           <h2>Configure {{ selectedMachine.name }}</h2>
 
           <!-- Form fields -->
-          <div class="config-form">
-            <!-- Product Type -->
-            <div class="form-group">
-              <label>Product Type</label>
-              <Select
-                  v-model="config.productType"
-                  :options="productTypes"
-                  optionLabel="label"
-                  optionValue="value"
-                  placeholder="Select Product Type (A-F)"
-                  class="w-full"
-              />
-            </div>
-
-            <!-- Piece Count -->
-            <div class="form-group">
-              <label>Piece Count</label>
-              <InputNumber
-                  v-model="config.pieceCount"
-                  :min="1"
-                  :max="9999"
-                  placeholder="Enter piece count"
-                  class="w-full"
-              />
-            </div>
-
-            <!-- Tolerance -->
-            <div class="form-group">
-              <label>Tolerance ({{ config.tolerance }})</label>
-              <Slider
-                  v-model="config.tolerance"
-                  :min="0.01"
-                  :max="0.05"
-                  :step="0.001"
-                  class="w-full"
-              />
-            </div>
-          </div>
+          <FormFields :config="config" />
 
           <!-- Action Buttons -->
           <div class="config-actions">
@@ -136,6 +99,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import {useConfigStore} from "./services/storageService.js";
+import FormFields from "./components/FormFields.vue";
 
 const toast = useToast()
 const configStore = useConfigStore()
@@ -153,14 +117,6 @@ const config = ref({
 // Static data
 const profiles = ref([])
 const machines = ref([])
-const productTypes = ref([
-  { label: 'Type A - Standard', value: 'A' },
-  { label: 'Type B - Premium', value: 'B' },
-  { label: 'Type C - Heavy Duty', value: 'C' },
-  { label: 'Type D - Precision', value: 'D' },
-  { label: 'Type E - Custom', value: 'E' },
-  { label: 'Type F - Experimental', value: 'F' }
-])
 
 // Computed properties
 const isConfigValid = computed(() => {
@@ -260,6 +216,7 @@ onMounted(() => {
   try{
     configStore.loadSettings()
     machines.value = configStore.machines
+    profiles.value = configStore.profiles
   } catch (e) {
     toast.add({
       severity: 'error',
@@ -352,40 +309,6 @@ button.secondary:hover {
   gap: 1rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--surface-200);
-}
-
-.tolerance-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.tolerance-slider {
-  flex: 1;
-  height: 6px;
-  background: var(--surface-200);
-  border-radius: 3px;
-  outline: none;
-  -webkit-appearance: none;
-}
-
-.tolerance-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
-  width: 20px;
-  height: 20px;
-  background: var(--primary-500);
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.tolerance-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
-  background: var(--primary-500);
-  border-radius: 50%;
-  cursor: pointer;
-  border: none;
 }
 
 .empty-state {
