@@ -1,0 +1,401 @@
+<template>
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header">
+      <h2>Machine Configuration System</h2>
+      <p>Configure your machines with precision and reliability</p>
+<!--      <Button-->
+<!--          label="Clear All Settings"-->
+<!--          icon="pi pi-download"-->
+<!--          class="p-button-secondary"-->
+<!--          @click="configStore.clearAll"-->
+<!--      />-->
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Sidebar -->
+      <div class="sidebar">
+        <!-- Profile Section -->
+        <div class="profile-section">
+          <h3>Configuration Profile</h3>
+          <div class="form-group">
+            <label>Select Profile</label>
+            <Select
+                v-model="selectedProfile"
+                :options="profiles"
+                optionLabel="name"
+                optionValue="id"
+                placeholder="Choose Profile"
+                @change="onProfileChange"
+                class="w-full"
+                style="margin-bottom: 1rem"
+            />
+            <Button
+                label="Create New Profile"
+                icon="pi pi-plus"
+                class="p-button-sm p-button-outlined mt-2 w-full"
+                @click="createNewProfile"
+            />
+          </div>
+        </div>
+
+        <Divider/>
+
+        <!-- Machines List -->
+        <div class="machines-section">
+          <h3>Available Machines</h3>
+          <div
+              v-for="machine in machines"
+              :key="machine.id"
+              class="machine-item"
+              :class="{ active: selectedMachine?.id === machine.id }"
+              @click="selectMachine(machine)"
+          >
+            <div class="machine-name">{{ machine.name }}</div>
+            <div class="machine-id">ID: {{ machine.id }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <div class="main-content">
+        <div v-if="selectedMachine" class="config-panel">
+          <h2>Configure {{ selectedMachine.name }}</h2>
+
+          <!-- Form fields -->
+          <div class="config-form">
+            <!-- Product Type -->
+            <div class="form-group">
+              <label>Product Type</label>
+              <Select
+                  v-model="config.productType"
+                  :options="productTypes"
+                  optionLabel="label"
+                  optionValue="value"
+                  placeholder="Select Product Type (A-F)"
+                  class="w-full"
+              />
+            </div>
+
+            <!-- Piece Count -->
+            <div class="form-group">
+              <label>Piece Count</label>
+              <InputNumber
+                  v-model="config.pieceCount"
+                  :min="1"
+                  :max="9999"
+                  placeholder="Enter piece count"
+                  class="w-full"
+              />
+            </div>
+
+            <!-- Tolerance -->
+            <div class="form-group">
+              <label>Tolerance ({{ config.tolerance }})</label>
+              <Slider
+                  v-model="config.tolerance"
+                  :min="0.01"
+                  :max="0.05"
+                  :step="0.001"
+                  class="w-full"
+              />
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="config-actions">
+            <Button
+                label="Save Configuration"
+                icon="pi pi-check"
+                @click="saveConfiguration"
+                :disabled="!isConfigValid"
+            />
+            <Button
+                label="Reset"
+                icon="pi pi-refresh"
+                class="p-button-secondary"
+                @click="resetConfiguration"
+            />
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div v-else class="empty-state">
+          <i class="pi pi-cog"></i>
+          <h3>No Machine Selected</h3>
+          <p>Please select a machine from the sidebar to configure its settings.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <Toast />
+</template>
+
+<script setup>
+import { ref, computed, watch, onMounted } from 'vue'
+import { useToast } from 'primevue/usetoast'
+import {useConfigStore} from "./services/storageService.js";
+
+const toast = useToast()
+const configStore = useConfigStore()
+
+// Reactive data
+const selectedProfile = ref('default')
+const selectedMachine = ref(0)
+
+const config = ref({
+  productType: null,
+  pieceCount: 0,
+  tolerance: 0.03
+})
+
+// Static data
+const profiles = ref([])
+const machines = ref([])
+const productTypes = ref([
+  { label: 'Type A - Standard', value: 'A' },
+  { label: 'Type B - Premium', value: 'B' },
+  { label: 'Type C - Heavy Duty', value: 'C' },
+  { label: 'Type D - Precision', value: 'D' },
+  { label: 'Type E - Custom', value: 'E' },
+  { label: 'Type F - Experimental', value: 'F' }
+])
+
+// Computed properties
+const isConfigValid = computed(() => {
+  return config.value.productType &&
+      config.value.pieceCount > 0 &&
+      config.value.tolerance >= 0.01 &&
+      config.value.tolerance <= 0.05
+})
+
+// Methods
+const selectMachine = (machine) => {
+  selectedMachine.value = machine
+}
+
+const onProfileChange = () => {
+  if (selectedMachine.value) {
+    loadMachineConfig()
+  }
+}
+
+const createNewProfile = () => {
+  const profileName = prompt('Enter new profile name:')
+
+  if (profileName && profileName.trim()) {
+    const newProfile = { id:  `profile_${Date.now()}`, name: profileName.trim() }
+    configStore.addProfile(newProfile)
+    profiles.value = configStore.profiles
+
+    toast.add({
+      severity: 'success',
+      summary: 'Profile Created',
+      detail: `New profile "${profileName}" has been created`,
+      life: 3000
+    })
+  }
+}
+
+const saveConfiguration = () => {
+  if (!isConfigValid.value) {
+    toast.add({
+      severity: 'error',
+      summary: 'Invalid Configuration',
+      detail: 'Please fill all required fields correctly',
+      life: 3000
+    })
+    return
+  }
+
+  configStore.updateSettings(selectedProfile.value, selectedMachine.value.id, { ...config.value })
+
+  toast.add({
+    severity: 'success',
+    summary: 'Configuration Saved',
+    detail: `Settings for ${selectedMachine.value.name} have been saved`,
+    life: 3000
+  })
+}
+
+const loadMachineConfig = () => {
+  if (!selectedMachine.value || !selectedProfile.value) return
+
+  try {
+    const configData = configStore.getProfileSettings(selectedProfile.value, selectedMachine.value.id)
+    config.value = { ...configData }
+  } catch (error) {
+    console.error('Error loading config:', error)
+    toast.add({
+      severity: 'error',
+      summary: 'Load Error',
+      detail: 'Failed to load machine configuration',
+      life: 3000
+    })
+  }
+}
+
+const resetConfiguration = () => {
+  if (selectedMachine.value) {
+    config.value = {
+      productType: 'A',
+      pieceCount: 1,
+      tolerance: 0.03
+    }
+
+    configStore.resetSettings(selectedProfile.value, selectedMachine.value.id)
+  }
+}
+
+// Watchers
+watch(() => selectedMachine.value, (newMachine) => {
+  if (newMachine) {
+    loadMachineConfig()
+  }
+})
+
+// Lifecycle
+onMounted(() => {
+  try{
+    configStore.loadSettings()
+    machines.value = configStore.machines
+  } catch (e) {
+    toast.add({
+      severity: 'error',
+      summary: 'Initialization Error',
+      detail: 'Failed to load initial configuration data',
+      life: 3000
+    })
+  }
+
+  // Auto-select first machine for better UX
+  if (machines.value.length > 0) {
+    selectMachine(machines.value[0])
+  }
+})
+</script>
+
+<style scoped>
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  color: var(--surface-700);
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+select, input, button {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid var(--surface-200);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+}
+
+select:hover, input:hover {
+  border-color: var(--primary-300);
+}
+
+select:focus, input:focus {
+  outline: none;
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.2);
+}
+
+button {
+  background: var(--primary-500);
+  color: white;
+  border: 2px solid var(--primary-500);
+  cursor: pointer;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+
+button:hover {
+  background: var(--primary-600);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
+}
+
+button.secondary {
+  background: var(--surface-100);
+  color: var(--surface-700);
+  border-color: var(--surface-300);
+}
+
+button.secondary:hover {
+  background: var(--surface-200);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.config-panel h2 {
+  color: var(--surface-800);
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.config-form {
+  display: grid;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.config-actions {
+  display: flex;
+  gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--surface-200);
+}
+
+.tolerance-container {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.tolerance-slider {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-200);
+  border-radius: 3px;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.tolerance-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  background: var(--primary-500);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.tolerance-slider::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  background: var(--primary-500);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: var(--surface-500);
+}
+
+.empty-state h3 {
+  font-size: 1.25rem;
+  margin-bottom: 0.5rem;
+}
+</style>
