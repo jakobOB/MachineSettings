@@ -4,12 +4,6 @@
     <div class="header">
       <h2>Machine Configuration System</h2>
       <p>Configure your machines with precision and reliability</p>
-<!--      <Button-->
-<!--          label="Clear All Settings"-->
-<!--          icon="pi pi-download"-->
-<!--          class="p-button-secondary"-->
-<!--          @click="configStore.clearAll"-->
-<!--      />-->
     </div>
 
     <!-- Content Area -->
@@ -126,17 +120,20 @@ const isConfigValid = computed(() => {
       config.value.tolerance <= 0.05
 })
 
+//------------------------------------------------------------
 // Methods
 const selectMachine = (machine) => {
   selectedMachine.value = machine
 }
 
+// Handle profile change
 const onProfileChange = () => {
   if (selectedMachine.value) {
     loadMachineConfig()
   }
 }
 
+// Create a new configuration profile
 const createNewProfile = () => {
   const profileName = prompt('Enter new profile name:')
 
@@ -154,6 +151,7 @@ const createNewProfile = () => {
   }
 }
 
+// Save configuration for selected machine and profile
 const saveConfiguration = () => {
   if (!isConfigValid.value) {
     toast.add({
@@ -175,6 +173,7 @@ const saveConfiguration = () => {
   })
 }
 
+// Load configuration for selected machine and profile
 const loadMachineConfig = () => {
   if (!selectedMachine.value || !selectedProfile.value) return
 
@@ -182,7 +181,6 @@ const loadMachineConfig = () => {
     const configData = configStore.getProfileSettings(selectedProfile.value, selectedMachine.value.id)
     config.value = { ...configData }
   } catch (error) {
-    console.error('Error loading config:', error)
     toast.add({
       severity: 'error',
       summary: 'Load Error',
@@ -192,6 +190,7 @@ const loadMachineConfig = () => {
   }
 }
 
+// Reset configuration to defaults for selected machine and profile
 const resetConfiguration = () => {
   if (selectedMachine.value) {
     config.value = {
@@ -296,12 +295,6 @@ button.secondary:hover {
   margin-bottom: 1.5rem;
   font-size: 1.5rem;
   font-weight: 600;
-}
-
-.config-form {
-  display: grid;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
 }
 
 .config-actions {

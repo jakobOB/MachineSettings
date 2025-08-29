@@ -58,6 +58,7 @@ export const useConfigStore = defineStore('config', {
             }
         },
 
+        // Persist the entire settings object to localStorage
         saveSetting() {
             // Save the whole dataset to localStorage
             const payload = {
@@ -67,6 +68,7 @@ export const useConfigStore = defineStore('config', {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
         },
 
+        // Load settings from localStorage, or initialize if none exist
         loadSettings() {
             const raw = localStorage.getItem(STORAGE_KEY)
             if (!raw) return this.initialize()
@@ -81,11 +83,13 @@ export const useConfigStore = defineStore('config', {
             }
         },
 
+        // Reset settings for a specific profile and machine to default values
         resetSettings(profileId, machineId) {
             this.settings[profileId][machineId] = { ...DEFAULT_ENTRY }
             this.saveSetting()
         },
 
+        // Clear all stored settings from localStorage and reinitialize
         clearAll() {
             localStorage.removeItem(STORAGE_KEY);
             this.loadSettings()
