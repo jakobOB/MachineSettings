@@ -110,10 +110,10 @@ import FormFields from "./components/FormFields.vue";
 const toast = useToast()
 const configStore = useConfigStore()
 
+//------------------------------------------------------------
 // Reactive data
 const selectedProfile = ref('default')
 const selectedMachine = ref(0)
-
 const config = ref({
   productType: null,
   pieceCount: 0,
@@ -163,6 +163,7 @@ const createNewProfile = () => {
   }
 }
 
+// Delete an existing configuration profile
 const deleteProfile = (profile) => {
   if (confirm(`Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`)) {
     configStore.removeProfile(profile.id)
@@ -235,6 +236,7 @@ const resetConfiguration = () => {
   }
 }
 
+//------------------------------------------------------------
 // Watchers
 watch(() => selectedMachine.value, (newMachine) => {
   if (newMachine) {
