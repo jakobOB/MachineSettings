@@ -85,6 +85,14 @@ binder-co/
 
 ## How It Works
 
+### User Interface
+A user can select a profile from the left sidebar. The machines for that profile are displayed below. For each machine,
+the user can edit the settings on the right side. THe user can save the settings, or reset the values to default values.
+It is possible to add a new profile for which all machines are initialized with default values. A profile can be deleted as well.
+The profiles with their machine settings are persisted to `localStorage`. This is used as a simple way to store data locally without a backend.
+To store the data correctly on the machine, another storage would be needed. 
+A possible way would be to use a backend with a database to access the machine settings from different devices.
+
 ### Storage model (single-key snapshot)
 All app state is serialized into one `localStorage` key.  
 This is used for simplicity since no backend is involved. Even though it may not be secure, no sensitive data is stored.
