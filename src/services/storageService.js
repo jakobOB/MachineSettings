@@ -17,6 +17,18 @@ export const useConfigStore = defineStore('config', {
         settings: {},
     }),
     actions: {
+        getSize(){
+            let _lsTotal = 0, _xLen
+            const _x = STORAGE_KEY
+            if (!localStorage.hasOwnProperty(_x)) {
+                return;
+            }
+            _xLen = ((localStorage[_x].length + _x.length) * 2);
+            _lsTotal += _xLen;
+            console.log("Total Size Used= " + (_lsTotal / 1024).toFixed(2) + " KB");
+            return (_lsTotal / 1024).toFixed(2);
+        },
+
         // Initialize with default profile and settings
         initialize() {
             this.profiles = [ { ...DEFAULT_PROFILE } ];
@@ -73,6 +85,7 @@ export const useConfigStore = defineStore('config', {
                 settings: this.settings
             }
             localStorage.setItem(STORAGE_KEY, JSON.stringify(payload))
+            this.getSize()
         },
 
         // Load settings from localStorage, or initialize if none exist
