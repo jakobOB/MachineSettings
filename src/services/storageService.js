@@ -48,6 +48,13 @@ export const useConfigStore = defineStore('config', {
             this.saveSetting()
         },
 
+        // Remove a profile and its associated settings
+        removeProfile(profileId) {
+            this.profiles = this.profiles.filter(p => p.id !== profileId);
+            delete this.settings[profileId];
+            this.saveSetting();
+        },
+
         // Update settings for a specific profile and machine
         updateSettings(profileId, machineId, newSettings) {
             try {

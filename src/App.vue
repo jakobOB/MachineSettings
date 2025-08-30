@@ -24,7 +24,19 @@
                 @change="onProfileChange"
                 class="w-full"
                 style="margin-bottom: 1rem"
-            />
+            >
+              <template #option="{ option }">
+                <div class="option-row">
+                  <div class="option-text">{{ option.name }}</div>
+                  <Button
+                      v-if="option.id !== 'default'"
+                      icon="pi pi-trash"
+                      class="p-button-text p-button-danger p-button-sm"
+                      style="color: red"
+                      @click="deleteProfile(option)" />
+                </div>
+              </template>
+            </Select>
             <Button
                 label="Create New Profile"
                 icon="pi pi-plus"
@@ -151,6 +163,26 @@ const createNewProfile = () => {
   }
 }
 
+const deleteProfile = (profile) => {
+  if (confirm(`Are you sure you want to delete the profile "${profile.name}"? This action cannot be undone.`)) {
+    configStore.removeProfile(profile.id)
+    profiles.value = configStore.profiles
+
+    // If the deleted profile was selected, revert to default
+    if (selectedProfile.value === profile.id) {
+      selectedProfile.value = 'default'
+      loadMachineConfig()
+    }
+
+    toast.add({
+      severity: 'success',
+      summary: 'Profile Deleted',
+      detail: `Profile "${profile.name}" has been deleted`,
+      life: 3000
+    })
+  }
+}
+
 // Save configuration for selected machine and profile
 const saveConfiguration = () => {
   if (!isConfigValid.value) {
@@ -233,6 +265,16 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.option-row {
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between; /* text left, button right */
+  width: 100%;
+  gap: .5rem;
+}
+.option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
 .form-group {
   margin-bottom: 1rem;
 }

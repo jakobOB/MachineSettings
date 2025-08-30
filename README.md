@@ -1,20 +1,20 @@
 # Machine Configurator (Vue 3 + Pinia + PrimeVue 4)
 
 A small webapp to configure machine settings per **profile**.  
-Left side shows a searchable list of profiles and machines; right side lets you edit **Product Type (A–F)**, **Piece Count (0–10,000)**, and **Tolerance (0.01–0.05)**.  
-All settings are persisted to `localStorage` per profile + machine. Includes **Save**, **Load** and **Reset** actions.
+Left side shows a list of profiles and machines; right side lets you edit **Product Type (A–F)**, **Piece Count (0–10,000)**,
+and **Tolerance (0.01–0.05)** for each machine. 
+All settings are persisted to `localStorage` (described further down). Includes **Save**, **Load** and **Reset** actions.
 
 ---
 
 ## Live Demo
 
-👉 **Demo:** 
-`https://maschinesettings.netlify.app/`
+👉 **Demo:** https://maschinesettings.netlify.app/
 ---
 
 ## Features
 
-- ✅ **Profiles:** adding new profiles; switching profiles.
+- ✅ **Profiles:** adding/removing/switching profiles;
 - ✅ **Machine settings:** Product Type, Piece Count, Tolerance.
 - ✅ **Persistence:** stored locally via `localStorage` (single-key snapshot). For simplicity, no backend.
 - ✅ **Initialization:** first run creates **Default** profile + **4** default machines.
