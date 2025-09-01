@@ -11,57 +11,21 @@
       <!-- Sidebar -->
       <div class="sidebar">
         <!-- Profile Section -->
-        <div class="profile-section">
-          <h3>Configuration Profile</h3>
-          <div class="form-group">
-            <label>Select Profile</label>
-            <Select
-                v-model="selectedProfile"
-                :options="profiles"
-                optionLabel="name"
-                optionValue="id"
-                placeholder="Choose Profile"
-                @change="onProfileChange"
-                class="w-full"
-                style="margin-bottom: 1rem"
-            >
-              <template #option="{ option }">
-                <div class="option-row">
-                  <div class="option-text">{{ option.name }}</div>
-                  <Button
-                      v-if="option.id !== 'default'"
-                      icon="pi pi-trash"
-                      class="p-button-text p-button-danger p-button-sm"
-                      style="color: red"
-                      @click="deleteProfile(option)" />
-                </div>
-              </template>
-            </Select>
-            <Button
-                label="Create New Profile"
-                icon="pi pi-plus"
-                class="p-button-sm p-button-outlined mt-2 w-full"
-                @click="createNewProfile"
-            />
-          </div>
-        </div>
+        <ProfileSection
+          :profiles="profiles"
+          v-model:selectedProfile="selectedProfile"
+          @deleteProfile="deleteProfile"
+          @createNewProfile="createNewProfile"
+        />
 
+        <!-- Divider -->
         <Divider/>
 
         <!-- Machines List -->
-        <div class="machines-section">
-          <h3>Available Machines</h3>
-          <div
-              v-for="machine in machines"
-              :key="machine.id"
-              class="machine-item"
-              :class="{ active: selectedMachine?.id === machine.id }"
-              @click="selectMachine(machine)"
-          >
-            <div class="machine-name">{{ machine.name }}</div>
-            <div class="machine-id">ID: {{ machine.id }}</div>
-          </div>
-        </div>
+        <MachineList
+          :machines="machines"
+          :selectedMachine="selectedMachine"
+          @update:selectedMachine="selectMachine" />
       </div>
 
       <!-- Main Content -->
@@ -102,10 +66,12 @@
 </template>
 
 <script setup>
-import { ref, computed, watch, onMounted } from 'vue'
+import {ref, computed, watch, onBeforeMount} from 'vue'
 import { useToast } from 'primevue/usetoast'
 import {useConfigStore} from "./services/storageService.js";
 import FormFields from "./components/FormFields.vue";
+import ProfileSection from "./components/ProfileSection.vue";
+import MachineList from "./components/MachineList.vue";
 
 const toast = useToast()
 const configStore = useConfigStore()
@@ -113,7 +79,7 @@ const configStore = useConfigStore()
 //------------------------------------------------------------
 // Reactive data
 const selectedProfile = ref('default')
-const selectedMachine = ref(0)
+const selectedMachine = ref(null)
 const config = ref({
   productType: null,
   pieceCount: 0,
@@ -138,13 +104,6 @@ const selectMachine = (machine) => {
   selectedMachine.value = machine
 }
 
-// Handle profile change
-const onProfileChange = () => {
-  if (selectedMachine.value) {
-    loadMachineConfig()
-  }
-}
-
 // Create a new configuration profile
 const createNewProfile = () => {
   const profileName = prompt('Enter new profile name:')
@@ -160,6 +119,8 @@ const createNewProfile = () => {
       detail: `New profile "${profileName}" has been created`,
       life: 3000
     })
+
+    selectedProfile.value = newProfile.id
   }
 }
 
@@ -244,8 +205,11 @@ watch(() => selectedMachine.value, (newMachine) => {
   }
 })
 
+watch(() => selectedProfile.value, () => {
+  loadMachineConfig()
+})
 // Lifecycle
-onMounted(() => {
+onBeforeMount(() => {
   try{
     configStore.loadSettings()
     machines.value = configStore.machines
@@ -267,20 +231,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.option-row {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between; /* text left, button right */
-  width: 100%;
-  gap: .5rem;
-}
-.option-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-
-.form-group {
-  margin-bottom: 1rem;
-}
-
 .form-group label {
   display: block;
   font-weight: 600;
@@ -321,17 +271,6 @@ button:hover {
   background: var(--primary-600);
   transform: translateY(-2px);
   box-shadow: 0 8px 25px rgba(59, 130, 246, 0.3);
-}
-
-button.secondary {
-  background: var(--surface-100);
-  color: var(--surface-700);
-  border-color: var(--surface-300);
-}
-
-button.secondary:hover {
-  background: var(--surface-200);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
 }
 
 .config-panel h2 {
